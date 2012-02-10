@@ -1,0 +1,14 @@
+This is a GStreamer plugin for Texas Instruments SoC platforms using the CodecEngine API.
+
+This plugin is a follow up project developed by RidgeRun to the gst-dmai-plugin available
+from http://gstreamer.ti.com, that adds support for the GStreamer 1.0 API and merges the
+design concepts from the ddompe branch into a refactored design.
+
+The main difference from previous projects is the use of async CodecEngine API to obtain
+performance gains on the elements, and the use of the newer GStreamer APIs.
+
+Currently this projects targets support for the following platforms:
+- DM36x
+- OMAP35x family (including DM3730)
+
+If you need support for other SoC, contact RidgeRun for support.
