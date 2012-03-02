@@ -40,8 +40,7 @@ gst_cmem_meta_get_info (void)
         sizeof (GstCMEMMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL, 
-        (GstMetaTransformFunction) NULL);
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }
