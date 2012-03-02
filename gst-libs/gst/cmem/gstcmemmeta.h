@@ -24,6 +24,9 @@
 
 #include <gst/gst.h>
 
+#include <xdc/std.h>
+#include <ti/sdo/ce/osal/Memory.h>
+
 G_BEGIN_DECLS typedef struct _GstCMEMMeta GstCMEMMeta;
 
 /**

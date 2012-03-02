@@ -9,7 +9,7 @@ libgstbasecmem_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMI
 libgstbasecmem_@GST_MAJORMINOR@include_HEADERS = \
 	gstcmemmeta.h
 
-libgstbasecmem_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(CODEC_CFLAGS)
-libgstbasecmem_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(CODEC_LIBS)
+libgstbasecmem_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(CODECS_CFLAGS)
+libgstbasecmem_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(CODECS_LIBS)
 
 noinst_HEADERS = gstcmemallocator.h
