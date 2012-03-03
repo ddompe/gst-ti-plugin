@@ -20,9 +20,14 @@
 
 #include "gsttiplugin.h"
 
+GST_DEBUG_CATEGORY_STATIC (tiplugin);
+#define GST_CAT_DEFAULT tiplugin
+
 static gboolean
 TIPlugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (tiplugin, "ti", 0, "TI plugin debugging");
+  gst_cmem_allocator_initialize ();
 //  return gst_element_register (plugin, "tiplugin", GST_RANK_PRIMARY, GST_TYPE_BASECEENC);
 }
 

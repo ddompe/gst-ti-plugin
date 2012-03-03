@@ -44,3 +44,33 @@ gst_cmem_meta_get_info (void)
   }
   return meta_info;
 }
+
+/**
+ * gst_buffer_get_cmem_physical_address:
+ * @buffer: a GstBuffer
+ * 
+ * Returns: the physical address of the buffer, or NULL if the buffer does not
+ * have the metadata
+ */
+gpointer
+gst_buffer_get_cmem_physical_address (GstBuffer * buffer)
+{
+  GstCMEMMeta *meta = gst_buffer_get_cmem_meta (buffer);
+  if (meta != NULL)
+    return meta->physical_address;
+  return NULL;
+}
+
+/**
+ * gst_buffer_set_cmem_physical_address:
+ * @buffer: a GstBuffer
+ * @paddr: the physical address of the buffer
+ */
+void
+gst_buffer_set_cmem_physical_address (GstBuffer * buffer, gpointer paddr)
+{
+  GstCMEMMeta *meta = gst_buffer_get_cmem_meta (buffer);
+  if (meta == NULL)
+    meta = gst_buffer_add_cmem_meta (buffer);
+  meta->physical_address = paddr;
+}

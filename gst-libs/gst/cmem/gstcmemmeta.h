@@ -49,21 +49,11 @@ const GstMetaInfo *gst_cmem_meta_get_info (void);
 #define gst_buffer_add_cmem_meta(b) \
   ((GstCMEMMeta*)gst_buffer_add_meta((b),GST_CMEM_META_INFO,NULL))
 
-/**
- * gst_buffer_get_cmem_physical_address:
- * @buffer: a GstBuffer
- * 
- * Returns: the physical address of the buffer, or NULL if the buffer does not
- * have the metadata
- */
-inline gpointer
-gst_buffer_get_cmem_physical_address (GstBuffer * buffer)
-{
-  GstCMEMMeta *meta = gst_buffer_get_cmem_meta (buffer);
-  if (meta != NULL)
-    return meta->physical_address;
-  return NULL;
-}
+gpointer
+gst_buffer_get_cmem_physical_address (GstBuffer * buffer);
+
+void
+gst_buffer_set_cmem_physical_address (GstBuffer * buffer, gpointer paddr);
 
 G_END_DECLS
 #endif
