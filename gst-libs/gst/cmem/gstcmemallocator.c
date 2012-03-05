@@ -39,8 +39,25 @@ typedef struct
 //  guint32 physical_address;
 } GstMemoryCMEM;
 
+static void
+_cmem_mem_init (GstMemoryCMEM * mem, GstMemoryFlags flags,
+    GstMemory * parent, gsize alloc_size, gpointer data,
+    gsize maxsize, gsize offset, gsize size)
+{
+  mem->mem.flags = flags;
+  mem->mem.refcount = 1;
+  mem->mem.parent = parent;
+  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x1 : 0);
+  mem->mem.maxsize = maxsize;
+  mem->mem.offset = offset;
+  mem->mem.size = size;
+  mem->mem.allocator = _cmem_allocator;
+  mem->alloc_size = alloc_size;
+  mem->data = data;
+}
+
 GstMemoryCMEM *
-_cmem_new_mem_block(gsize maxsize, gsize align, gsize offset, gsize size)
+_cmem_new_mem_block (gsize maxsize, gsize align, gsize offset, gsize size)
 {
   GstMemoryCMEM *mem;
 
@@ -51,21 +68,14 @@ _cmem_new_mem_block(gsize maxsize, gsize align, gsize offset, gsize size)
   mem->alloc_params = Memory_DEFAULTPARAMS;
   mem->alloc_params.type = Memory_CONTIGPOOL;
   mem->alloc_params.flags = Memory_CACHED;
-  mem->alloc_params.align = ((UInt)(align - 1));
+  mem->alloc_params.align = ((UInt) (align - 1));
 
-  mem->data = (guint8 *) Memory_alloc(maxsize, &mem->alloc_params);
+  mem->data = (guint8 *) Memory_alloc (maxsize, &mem->alloc_params);
   if (mem->data == NULL) {
-    g_slice_free1 (sizeof(GstMemoryCMEM), mem);
+    g_slice_free1 (sizeof (GstMemoryCMEM), mem);
   }
-  mem->alloc_size = maxsize;
-  mem->mem.allocator = _cmem_allocator;
-  mem->mem.flags = 0;
-  mem->mem.refcount = 1;
-  mem->mem.parent = NULL;
-  mem->mem.state = 0;
-  mem->mem.maxsize = maxsize;
-  mem->mem.offset = offset;
-  mem->mem.size = size;
+
+  _cmem_mem_init (mem, 0, NULL, maxsize, mem->data, maxsize, offset, size);
 
   return mem;
 }
@@ -82,7 +92,7 @@ _cmem_map (GstMemoryCMEM * mem, GstMapFlags flags)
 {
   if (flags & GST_MAP_READ) {
     GST_DEBUG ("invalidate cache for memory %p", mem);
-    Memory_cacheInv(mem->data,mem->alloc_size);
+    Memory_cacheInv (mem->data, mem->mem.maxsize);
   }
   return mem->data;
 }
@@ -91,7 +101,7 @@ static gboolean
 _cmem_unmap (GstMemoryCMEM * mem)
 {
   GST_DEBUG ("write-back cache for memory %p", mem);
-  Memory_cacheWb(mem->data,mem->alloc_size);
+  Memory_cacheWb (mem->data, mem->mem.maxsize);
   return TRUE;
 }
 
@@ -103,8 +113,11 @@ _cmem_free (GstMemoryCMEM * mem)
   if (mem->mem.parent)
     gst_memory_unref (mem->mem.parent);
 
-  Memory_free(mem->data,mem->alloc_size,&mem->alloc_params);
-  g_slice_free1 (sizeof(GstMemoryCMEM), mem);
+  if (mem->alloc_size) {
+    Memory_cacheWb (mem->data, mem->alloc_size);
+    Memory_free (mem->data, mem->alloc_size, &mem->alloc_params);
+  }
+  g_slice_free1 (sizeof (GstMemoryCMEM), mem);
 }
 
 static GstMemoryCMEM *
@@ -116,8 +129,7 @@ _cmem_copy (GstMemoryCMEM * mem, gssize offset, gsize size)
     size = mem->mem.size > offset ? mem->mem.size - offset : 0;
 
   copy =
-      _cmem_new_mem_block (mem->mem.maxsize, 0, mem->mem.offset + offset,
-      size);
+      _cmem_new_mem_block (mem->mem.maxsize, 0, mem->mem.offset + offset, size);
   memcpy (copy->data, mem->data, mem->mem.maxsize);
   GST_DEBUG ("cmem copy memory %p -> %p", mem, copy);
 
@@ -127,7 +139,6 @@ _cmem_copy (GstMemoryCMEM * mem, gssize offset, gsize size)
 static GstMemoryCMEM *
 _cmem_share (GstMemoryCMEM * mem, gssize offset, gsize size)
 {
-#if 0
   GstMemoryCMEM *sub;
   GstMemory *parent;
 
@@ -138,25 +149,23 @@ _cmem_share (GstMemoryCMEM * mem, gssize offset, gsize size)
   if (size == -1)
     size = mem->mem.size - offset;
 
-  sub =
-      _default_mem_new (parent->flags, parent, mem->data, NULL,
+  sub = g_slice_alloc (sizeof (GstMemoryCMEM));
+  if (mem == NULL)
+    return NULL;
+
+  _cmem_mem_init (sub, parent->flags, parent, 0, mem->data,
       mem->mem.maxsize, mem->mem.offset + offset, size);
 
   return sub;
-#else 
-  return NULL;
-#endif
 }
 
 static gboolean
-_cmem_is_span (GstMemoryCMEM * mem1, GstMemoryCMEM * mem2,
-    gsize * offset)
+_cmem_is_span (GstMemoryCMEM * mem1, GstMemoryCMEM * mem2, gsize * offset)
 {
-#if 0
   if (offset) {
-    GstMemoryDefault *parent;
+    GstMemoryCMEM *parent;
 
-    parent = (GstMemoryDefault *) mem1->mem.parent;
+    parent = (GstMemoryCMEM *) mem1->mem.parent;
 
     *offset = mem1->mem.offset - parent->mem.offset;
   }
@@ -164,9 +173,6 @@ _cmem_is_span (GstMemoryCMEM * mem1, GstMemoryCMEM * mem2,
   /* and memory is contiguous */
   return mem1->data + mem1->mem.offset + mem1->mem.size ==
       mem2->data + mem2->mem.offset;
-#else
-  return FALSE;
-#endif
 }
 
 static void
@@ -189,10 +195,10 @@ gst_cmem_allocator_initialize (void)
     (GstMemoryIsSpanFunction) _cmem_is_span,
   };
 
-  GST_DEBUG_CATEGORY_INIT(cmem, "cmem", 0, "CMEM allocation debugging");
+  GST_DEBUG_CATEGORY_INIT (cmem, "cmem", 0, "CMEM allocation debugging");
 
-  _cmem_allocator = gst_allocator_new(&_mem_info,NULL,_priv_cmem_notify);
+  _cmem_allocator = gst_allocator_new (&_mem_info, NULL, _priv_cmem_notify);
   gst_allocator_register (GST_ALLOCATOR_CMEM,
       gst_allocator_ref (_cmem_allocator));
-  GST_DEBUG("cmem memory allocator registered!");
+  GST_DEBUG ("cmem memory allocator registered!");
 }
