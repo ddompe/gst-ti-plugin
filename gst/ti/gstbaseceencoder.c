@@ -25,59 +25,99 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define GST_CAT_DEFAULT gstcebaseencoder_debug
+#define GST_CAT_DEFAULT gst_ce_base_encoder_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+enum
+{
+	PROP_0,
+	PROP_A
+};
+
 static void
-gst_base_ce_encoder_finalize (GObject * object);
+gst_base_ce_encoder_base_init (GstBaseCEEncoderClass * klass)
+{
+  /* Initialize dynamic data */
+}
+
+static void
+gst_base_ce_encoder_base_finalize (GstBaseCEEncoderClass * klass)
+{
+}
+
+static void
+gst_base_ce_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+ // GstBaseCEEncoder *base_enc = GST_BASE_CE_ENCODER (object);
+
+  /* Set base params */
+  switch (prop_id) {
+    default:
+      break;
+  }
+
+}
+
+static void
+gst_base_ce_encoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+//  GstBaseCEEncoder *base_enc = GST_BASE_CE_ENCODER (object);
+
+  switch (prop_id) {
+    default:
+      break;
+  }
+}
 
 static void
 gst_base_ce_encoder_class_init (GstBaseCEEncoderClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gstcebaseencoder_debug, "gstcebaseencoder", 0, "Base CE Encoder Class");
+  GST_DEBUG_CATEGORY_INIT (gst_ce_base_encoder_debug, "gstcebaseencoder", 0,
+      "Base CE Encoder Class");
 
-  gobject_class->finalize = gst_base_ce_encoder_finalize;
+  gobject_class->set_property = gst_base_ce_encoder_set_property;
+  gobject_class->get_property = gst_base_ce_encoder_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_A,
+      g_param_spec_boolean ("testa", "Test A", "Testing A", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
 }
 
 static void
-gst_base_ce_encoder_init (GstBaseCEEncoder *base_encoder)
-
-}
-
-/* Function for Finalize the class instance */
-static void
-gst_base_ce_encoder_finalize (GObject * object)
+gst_base_ce_encoder_class_finalize (GstBaseCEEncoderClass * klass,
+    gpointer * class_data)
 {
-  GstBaseCEEncoder *base_encoder = GST_BASE_CE_ENCODER (object);
-
-  GST_DEBUG_OBJECT (base_encoder, "Finalizing");
 }
 
 /* Obtain the type of the class */
-GType gst_base_ce_encoder_get_type(void)
+GType
+gst_base_ce_encoder_get_type (void)
 {
-    static GType object_type = 0;
-    
-    static const GTypeInfo object_info = {
-            sizeof(GstBaseCEEncoderClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gst_base_ce_encoder_class_init,
-            NULL,
-            NULL,
-            sizeof(GstBaseCEEncoder),
-            0,
-            (GInstanceInitFunc) gst_base_ce_encoder_init,
-            NULL
-        };
+  static GType object_type = 0;
 
-    object_type = g_type_register_static(GST_TYPE_ELEMENT,
-                          "GstBaseCEEncoder", &object_info, (GTypeFlags)0);
+  static const GTypeInfo object_info = {
+    sizeof (GstBaseCEEncoderClass),
+    (GBaseInitFunc) gst_base_ce_encoder_base_init,
+    (GBaseFinalizeFunc) gst_base_ce_encoder_base_finalize,
+    (GClassInitFunc) gst_base_ce_encoder_class_init,
+    (GClassFinalizeFunc) gst_base_ce_encoder_class_finalize,
+    NULL,
+    sizeof (GstBaseCEEncoder),
+    0,
+    NULL,
+    NULL
+  };
 
-    return object_type;
+  object_type = g_type_register_static (GST_TYPE_ELEMENT,
+      "GstBaseCEEncoder", &object_info, (GTypeFlags) 0);
+
+  return object_type;
 };
 
 /** gst_base_ce_encoder_get_output_buffer
@@ -86,8 +126,21 @@ GType gst_base_ce_encoder_get_type(void)
  *
  * Returns: a #GstBuffer 
  */
-GstBuffer*
-gst_base_ce_encoder_get_output_buffer(GstBaseCEEncoder *base_encoder, gsize size) 
+GstBuffer *
+gst_base_ce_encoder_get_output_buffer (GstBaseCEEncoder * base_encoder,
+    gsize size)
 {
   return NULL;
+}
+
+void
+gst_base_ce_encoder_shrink_output_buffer (GstBaseCEEncoder * base_encoder,
+    GstBuffer * buffer, gsize new_size)
+{
+}
+
+void
+gst_base_ce_encoder_encode (GstBaseCEEncoder * base_encoder,
+    GstBuffer * input_buffer, GstBuffer * output_buffer)
+{
 }

@@ -46,18 +46,47 @@ struct _GstBaseCEEncoder
 
   GstPad *sink_pad;
   GstPad *src_pad;
+  
+  /* Members for encode process */
+  char          *codec_name;
+  gpointer      codec_handle;
+  gpointer      codec_params;
+  gpointer      codec_dynamic_params;
+  
+  /* Pointers to hold data submitted into CodecEngine */
+  gpointer      submitted_input_buffers;
+  gpointer      submitted_output_buffers;
+  gpointer      submitted_input_arguments;
+  gpointer      submitted_output_arguments;
+
 };
 
 struct _GstBaseCEEncoderClass
 {
   GstElementClass parent_class;
+
+#if 0  
+  /* Extend properties manipulate functions */
+  void      (set_extend_property) (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec);
+  void      (get_extend_property) (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec);
+#endif
+  
+  /* Virtual functions for CE API */
+  void      (*encoder_alloc_params) (GstBaseCEEncoder *base_encoder);
+  void      (*encoder_free_params) (GstBaseCEEncoder *base_encoder);
+  gint32    (*encoder_control) (GstBaseCEEncoder *base_encoder);
+  void 		  (*encoder_delete) (GstBaseCEEncoder *base_encoder);
+  gpointer  (*encoder_create) (GstBaseCEEncoder *base_encoder);
+  gint32	  (*encoder_process_async) (GstBaseCEEncoder *base_encoder, GstBuffer *input_buffer, GstBuffer *output_buffer);
+  gint32  	(*encoder_process_wait) (GstBaseCEEncoder *base_encoder);
 };
 
 GType gst_base_ce_encoder_get_type (void);
 
 /* Class functionality */
 GstBuffer *   gst_base_ce_encoder_get_output_buffer(GstBaseCEEncoder *base_encoder, gsize size);
-void          gst_base_ce_encoder_resize_output_buffer(GstBaseCEEncoder *base_encoder, GstBuffer *buffer);
+void          gst_base_ce_encoder_shrink_output_buffer(GstBaseCEEncoder *base_encoder, GstBuffer *buffer, gsize new_size);
+void          gst_base_ce_encoder_encode(GstBaseCEEncoder *base_encoder, GstBuffer *input_buffer, GstBuffer *output_buffer);
 
 G_END_DECLS
 
